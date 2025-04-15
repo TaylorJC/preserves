@@ -143,9 +143,35 @@ function M.register(key)
 		error('Key is already registered')
 	end
 
-	print ('Registered ' .. key)
-
 	M[key] = function(val) if val then M.set(key, val) else return M.get(key) end end
+end
+
+local function check_type_safety(store_value, value)
+	local set_type = type(store_value)
+	local val_type = type(value)
+
+	-- Either type is nil = ok
+	if set_type == 'nil' or val_type == 'nil' then
+		return
+	end
+
+	-- Catch differing types
+	if set_type ~= val_type then
+		error('Type Error: Tried to assign a value of type '..val_type..' with enforced type '..set_type)
+	end
+
+	-- Types are the same and not tables, exit
+	if set_type ~= 'table' then
+		return
+	end
+
+	-- Types are the same and tables, check each key value
+	-- Okay if the new value does not have the same keys as the existing value
+	for k, _ in pairs(store_value) do
+		if value[k] then 
+			check_type_safety(store_value[k], value[k])
+		end
+	end
 end
 
 -- Add a key value pair to our save data table
@@ -156,6 +182,7 @@ function M.set(key, value)
 
 	local val_type = type(value)
 
+	-- Check for functions in the value
 	if val_type == 'function' then
 		error('Value cannot be a function')
 	elseif val_type == 'table' then
@@ -169,21 +196,10 @@ function M.set(key, value)
 		M.register(key)
 	end
 
-	-- Enforce type safety if requested; not strongly enforced on tables.
+	-- Enforce type safety if requested
 	if typesafe then
-		local set_type = type(save_data[key])
-
-		if set_type ~= 'nil' and val_type ~= 'nil' and set_type ~= val_type then
-			error('Type Safety Error: Tried to assign a value of type ' .. val_type .. ' to '.. key ..' with enforced type ' .. set_type)
-		-- elseif set_type == 'table' then
-		-- 	for k, v in save_data[key] do
-		-- 		if value[k] and type(v) ~= type(value[k]) then
-		-- 			error('Type Safety Error: Tried to assign a value of type ' .. type(value[k]) .. ' to '.. key ..'  with enforced type ' .. type(v) .. ' in ' .. key .. ' table')
-		-- 		end
-		-- 	end
-		end
+		check_type_safety(save_data[key], value) 
 	end
-	print ('Set ' .. key .. ' to ' .. tostring(value))
 	
 	-- Set our key value
 	save_data[key] = value
@@ -201,8 +217,6 @@ function M.get(key)
 		error('Key must be a string')
 		return nil
 	end
-
-	print('Getting from key ' ..key)
 
 	local val = save_data[key]
 	
@@ -258,19 +272,16 @@ function M.save(save_name)
 	local save_file_name = save_name or ('save_' .. tostring(#save_files + 1))
 	
 	if type(save_file_name) ~= 'string' then
-		print('Name must be a string')
+		error('Name must be a string')
 		return
 	end	
 
 	if save_file_name:find('/\\') then
-		print('Name cannot contain path separators "/ \\"')
+		error('Name cannot contain path separators "/ \\"')
 		return
 	end	
 
-
 	local save_path = sys.get_save_file(app_id, save_file_name)
-
-	print ('Saving: ' .. save_path)
 	
 	if sys.save(save_path, save_data) then
 		save_to_path(save_path)
@@ -288,9 +299,8 @@ function M.load( save_name)
 	if not save_name then
 		return continue()
 	end
-	local save_path = sys.get_save_file(app_id, save_name)
 
-	print('Loading : ' .. save_path)
+	local save_path = sys.get_save_file(app_id, save_name)
 
 	local load_data = sys.load(save_path)
 
