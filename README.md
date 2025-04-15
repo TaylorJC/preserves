@@ -4,7 +4,7 @@ A simple wrapper around Defold's save & load functions. Designed to make saving 
 ## Install
 Add this library as a dependency to your Defold project by pasting this link in your `game.project` dependencies field, [more info here:](https://defold.com/manuals/libraries/): 
 ```
-https://github.com/TaylorJC/Preserves/releases/tag/1.0.zip
+https://github.com/TaylorJC/Preserves/archive/refs/tags/1.0.zip
 ```
 
 # Usage
