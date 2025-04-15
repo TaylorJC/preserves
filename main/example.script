@@ -1,0 +1,54 @@
+-- Load the Preserves modules
+local preserves = require('preserves.preserves')
+
+local starting_health = 10
+
+-- Add a value to your save data store
+-- Also registers a shortcut
+preserves.set('health', starting_health)
+
+print('Health (should be ' .. tostring(starting_health) .. '): ' .. preserves.get('health')) -- 10
+
+-- Save the data to disk
+preserves.save() -- Defaults to save_1
+
+-- Print out the list of all saves; should see our 'save_1' file
+for k, v in ipairs(preserves.get_saves()) do
+	print(tostring(k) .. ', ' .. tostring(v))
+end
+
+-- Change the 'health' data
+preserves.set('health', 5)
+
+-- Register a key before use
+preserves.register('poisoned')
+-- preserves.set('poisoned', true)
+-- This enables shortcut functions to set and access this data
+preserves.poisoned(true) -- equivalent to calling preserves.set('poisoned', true)
+print('Poisoned (should be true):' .. tostring(preserves.poisoned())) -- equivalent to calling preserves.get('poisoned') 
+
+
+-- Create a new named save
+preserves.save('example_save')
+
+print('Health (should be 5): ' .. preserves.get('health')) -- 5
+
+-- Load our first save by name, reverting our health to 10 and discarding the new data
+preserves.load('save_1')
+
+print('Health (should be 10): ' .. preserves.get('health')) -- 10
+print('Poisoned (should be nil): ' .. tostring(preserves.get('poisoned'))) -- nil
+
+-- Load our most recent save, in this case 'example_save'
+preserves.load()  -- defaults to last save; equivalent to preserves.continue()
+
+print('Health (should be 5): ' .. preserves.get('health')) -- 5
+print('Poisoned (should be true): ' .. tostring(preserves.get('poisoned'))) -- true
+
+-- Shortcut to access a data key
+print(preserves.health())
+
+local deeply_nested_fn = {this = {that = {tab = function() end}}}
+
+-- Fails if you attempt to save a table with containing a function
+preserves.set('fn_table', deeply_nested_fn)
