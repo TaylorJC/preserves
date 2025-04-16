@@ -17,7 +17,7 @@ scale_mode = stretch
 
 [project]
 title = Preserve
-dependencies#0 = https://url.to/library
+dependencies = 
 
 [input]
 game_binding = /builtins/input/all.input_bindingc

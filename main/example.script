@@ -1,54 +1,43 @@
--- Load the Preserves modules
-local preserves = require('preserves.preserves')
+local preserves = require('preserves.preserves') -- Import the module
 
-local starting_health = 10
+-- Register some data with the store
+print('Registering data')
+preserves.register('player_health')
 
--- Add a value to your save data store
--- Also registers a shortcut
-preserves.set('health', starting_health)
-
-print('Health (should be ' .. tostring(starting_health) .. '): ' .. preserves.get('health')) -- 10
-
--- Save the data to disk
-preserves.save() -- Defaults to save_1
-
--- Print out the list of all saves; should see our 'save_1' file
-for k, v in ipairs(preserves.get_saves()) do
-	print(tostring(k) .. ', ' .. tostring(v))
+for i = 1, 10 do
+	preserves.register('level_'..tostring(i))
 end
 
--- Change the 'health' data
-preserves.set('health', 5)
+-- Store data
+print('Setting player_health to 10')
+preserves.player_health(10)
+print('Setting level_1')
+preserves.level_1({name = 'Breezy Woods', dangerous = false, enemy_count = 0})
+-- Alternatively, use set()
+print('Setting level_9')
+preserves.set('level_9', {name = 'Cloud Top Ruins', dangerous = true, enemy_count = 5})
 
--- Register a key before use
-preserves.register('poisoned')
--- preserves.set('poisoned', true)
--- This enables shortcut functions to set and access this data
-preserves.poisoned(true) -- equivalent to calling preserves.set('poisoned', true)
-print('Poisoned (should be true):' .. tostring(preserves.poisoned())) -- equivalent to calling preserves.get('poisoned') 
+-- Save it to disk
+print('Saving to save_1')
+preserves.save() -- defaults to numbered saves e.g. 'save_1'
 
+-- Change your data
+print('Setting player_health to 5')
+preserves.player_health(5)
 
--- Create a new named save
-preserves.save('example_save')
+-- Fetch your stored data
+print('Health is now 5: ' .. tostring(assert(preserves.get('player_health') == 5, 'player_health should be 5'))) -- prints "5"
 
-print('Health (should be 5): ' .. preserves.get('health')) -- 5
+-- Custom save name
+print('Saving to Save_Game')
+preserves.save('Save_Game')
 
--- Load our first save by name, reverting our health to 10 and discarding the new data
-preserves.load('save_1')
+-- Load your save from disk
+print('Loading save_1') 
+preserves.load('save_1') 
+print('Health is 10 again: ' ..tostring(assert(preserves.get('player_health') == 10))) -- equivalent to the fetch above
 
-print('Health (should be 10): ' .. preserves.get('health')) -- 10
-print('Poisoned (should be nil): ' .. tostring(preserves.get('poisoned'))) -- nil
+print('Loading Save_Game')
+preserves.load() -- defaults to the last save; in this instance 'Save_Game'
 
--- Load our most recent save, in this case 'example_save'
-preserves.load()  -- defaults to last save; equivalent to preserves.continue()
-
-print('Health (should be 5): ' .. preserves.get('health')) -- 5
-print('Poisoned (should be true): ' .. tostring(preserves.get('poisoned'))) -- true
-
--- Shortcut to access a data key
-print(preserves.health())
-
-local deeply_nested_fn = {this = {that = {tab = function() end}}}
-
--- Fails if you attempt to save a table with containing a function
-preserves.set('fn_table', deeply_nested_fn)
+print('Health is 5 again: ' ..tostring(assert(preserves.get('player_health') == 5))) -- prints "5"
